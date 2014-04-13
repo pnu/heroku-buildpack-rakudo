@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-BUILD_PATH=/tmp/build-rakudo
-VENDOR_PATH=/app/vendor/rakudo
-
+BUILD_PATH="/tmp/build-rakudo-$$"
+VENDOR_PATH="/app/vendor/rakudo"
 mkdir -p $BUILD_PATH
 mkdir -p $VENDOR_PATH
+exec >$BUILD_PATH/log 2>&1
 
 cd $BUILD_PATH
 git clone https://github.com/rakudo/rakudo.git
@@ -42,7 +42,7 @@ perl6 bootstrap.pl
 panda install --notests DBIish
 
 cd $BUILD_PATH
-tar czf rakudo-$RAKUDO_REVISION.tgz -C $VENDOR_PATH .
+tar cvzf rakudo-$RAKUDO_REVISION.tgz -C $VENDOR_PATH .
 
 cd $BUILD_PATH/s3cmd
 git checkout v1.5.0-beta1
@@ -54,3 +54,5 @@ use_https = True
 EOF
 
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME
+mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_REVISION.log
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME
