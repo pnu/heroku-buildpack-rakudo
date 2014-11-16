@@ -42,6 +42,7 @@ export PATH=$VENDOR_PATH/languages/perl6/site/bin:$PATH
 cd $BUILD_PATH/panda
 perl6 bootstrap.pl
 panda install --notests DBIish
+panda install Task::Star
 
 cd $BUILD_PATH
 tar cvzf rakudo-$RAKUDO_REVISION.tgz -C $VENDOR_PATH .

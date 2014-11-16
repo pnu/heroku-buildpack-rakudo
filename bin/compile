@@ -27,6 +27,7 @@ mkdir -p "$BUILD_DIR/vendor/rakudo"
 curl -sL $RAKUDO_PACKAGE | tar xzf - -C "$BUILD_DIR/vendor/rakudo" &> /dev/null
 export PATH="$BUILD_DIR/vendor/rakudo/bin:$PATH"
 echo "export PATH=\"\$HOME/vendor/rakudo/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo.sh
+echo "export PATH=\"\$HOME/vendor/rakudo/languages/perl6/site/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo_site_bin.sh
 for package in $RAKUDO_LIBS; do
     RAKUDO_PACKAGE="$RAKUDO_URL/rakudo-$RAKUDO_VERSION-$package.tgz"
     status "Vendoring $RAKUDO_PACKAGE"
