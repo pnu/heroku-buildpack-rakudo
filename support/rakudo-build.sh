@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+HEROKU_STACK=${HEROKU_STACK-'cedar-14'}
+
 BUILD_PATH="/tmp/build-rakudo-$$"
 VENDOR_PATH="/app/vendor/rakudo"
 mkdir -p $BUILD_PATH
@@ -53,6 +55,6 @@ secret_key = $AWS_SECRET_ACCESS_KEY
 use_https = True
 EOF
 
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
 mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_REVISION.log
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
