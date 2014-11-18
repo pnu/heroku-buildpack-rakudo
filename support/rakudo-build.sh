@@ -57,5 +57,7 @@ use_https = True
 EOF
 
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
 mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_REVISION.log
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
