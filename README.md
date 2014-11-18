@@ -11,6 +11,30 @@ Usage
     $ git add -A; git commit -m 'implement the app'
     $ heroku create --buildpack https://github.com/pnu/heroku-buildpack-rakudo
     $ git push heroku master
+    $ heroku run perl6 -e\'.say for ^5\'
+    Running `perl6 -e'.say for ^5'` attached to terminal... up, run.7985
+    0
+    1
+    2
+    3
+    4
+
+By default this buildpack uses the version "latest" found in AWS S3 bucket
+https://heroku-buildpack-rakudo.s3.amazonaws.com/. You can specify the version
+with heroku configuration, or by adding file `.rakudo-version` to the root
+directory of the project. Eg.
+
+    $ echo "2014.10.133.gf.2.ffb.9.a" >.rakudo-version
+    $ git add .rakudo-version; git commit -m 'set rakudo version'
+
+    or..
+
+    $ heroku config:set BUILDPACK_RAKUDO_VERSION=2014.10.133.gf.2.ffb.9.a
+
+Next build will use the specified version.
+
+New rakudo version is compiled daily with the script described below. See
+bucket URL above for the list of currently available versions.
 
 Compiling rakudo
 ----------------
@@ -29,3 +53,10 @@ You can use the same build server to build multiple versions concurrently.
 Environment variable `RAKUDO_REVISION` specifies the rakudo version to build.
 It can be anything that works for `git checkout`. If not specified, default
 is HEAD of the default branch.
+
+Compiled package is saved as rakudo-VERSION.tgz, where VERSION is the version
+string given by `$*PERL.compiler.version`. If `RAKUDO_REVISION` is not
+specified (ie. HEAD of the default branch is built), the package is saved
+also as rakudo-latest.tgz.
+
+This can be used to specify the version of rakudo to deploy (see Usage above).
