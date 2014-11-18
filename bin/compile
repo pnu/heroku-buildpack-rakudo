@@ -16,7 +16,7 @@ export_env_dir $ENV_DIR '^BUILDPACK_' ''
 if [ -e "$BUILD_DIR/.rakudo-version" ]; then
     RAKUDO_VERSION=`cat "$BUILD_DIR/.rakudo-version"`
 fi
-RAKUDO_VERSION=${RAKUDO_VERSION-'Linz-121-g7dd7292'}
+RAKUDO_VERSION=${RAKUDO_VERSION-'latest'}
 RAKUDO_VERSION=${BUILDPACK_RAKUDO_VERSION-$RAKUDO_VERSION}
 RAKUDO_LIBS=${BUILDPACK_RAKUDO_LIBS-''}
 RAKUDO_URL=${BUILDPACK_RAKUDO_URL:-"https://heroku-buildpack-rakudo.s3.amazonaws.com/$STACK"}
@@ -25,7 +25,17 @@ RAKUDO_PACKAGE="$RAKUDO_URL/rakudo-$RAKUDO_VERSION.tgz"
 status "Vendoring $RAKUDO_PACKAGE"
 mkdir -p "$BUILD_DIR/vendor/rakudo"
 curl -sL $RAKUDO_PACKAGE | tar xzf - -C "$BUILD_DIR/vendor/rakudo" &> /dev/null
+
 export PATH="$BUILD_DIR/vendor/rakudo/bin:$PATH"
+### TODO hack: current binaries work only when installed to /app/vendor/rakudo
+rm -rf /app/vendor/rakudo; mkdir -p /app/vendor/rakudo
+curl -sL $RAKUDO_PACKAGE | tar xzf - -C "/app/vendor/rakudo" &> /dev/null
+export PATH="/app/vendor/rakudo/bin:$PATH"
+###
+
+CURRENT_RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
+status "Current rakudo version is $CURRENT_RAKUDO_VERSION"
+
 echo "export PATH=\"\$HOME/vendor/rakudo/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo.sh
 echo "export PATH=\"\$HOME/vendor/rakudo/languages/perl6/site/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo_site_bin.sh
 for package in $RAKUDO_LIBS; do
@@ -33,10 +43,6 @@ for package in $RAKUDO_LIBS; do
     status "Vendoring $RAKUDO_PACKAGE"
     curl -sL $RAKUDO_PACKAGE | tar xzf - -C "$BUILD_DIR/vendor/rakudo" &> /dev/null
 done
-
-## TODO should invoke rakudo to find our the real version of it
-CURRENT_RAKUDO_VERSION=$RAKUDO_VERSION
-status "Current rakudo version is $CURRENT_RAKUDO_VERSION"
 
 cd $BUILD_DIR
 

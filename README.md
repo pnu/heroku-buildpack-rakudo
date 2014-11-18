@@ -4,7 +4,13 @@ Heroku buildpack: Rakudo Perl 6
 Usage
 -----
 
-TODO
+    $ git init
+    $ cat >META.info
+    {}
+    ^D
+    $ git add -A; git commit -m 'implement the app'
+    $ heroku create --buildpack https://github.com/pnu/heroku-buildpack-rakudo
+    $ git push heroku master
 
 Compiling rakudo
 ----------------

@@ -34,7 +34,6 @@ make install
 cd $BUILD_PATH/rakudo
 perl ./Configure.pl --prefix=$VENDOR_PATH
 make install
-RAKUDO_REVISION=`git describe`
 
 export PATH=$VENDOR_PATH/bin:$PATH
 export PATH=$VENDOR_PATH/languages/perl6/site/bin:$PATH
@@ -43,9 +42,10 @@ cd $BUILD_PATH/panda
 perl6 bootstrap.pl
 panda install --notests DBIish
 panda install Task::Star
+RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
 
 cd $BUILD_PATH
-tar cvzf rakudo-$RAKUDO_REVISION.tgz -C $VENDOR_PATH .
+tar cvzf rakudo-$RAKUDO_VERSION.tgz -C $VENDOR_PATH .
 
 cd $BUILD_PATH/s3cmd
 git checkout v1.5.0-beta1
@@ -56,8 +56,11 @@ secret_key = $AWS_SECRET_ACCESS_KEY
 use_https = True
 EOF
 
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
-mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_REVISION.log
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_REVISION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION.log
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+
+if [ -z "$RAKUDO_REVISION" ]; then
+    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
+    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
+fi
