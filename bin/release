@@ -6,4 +6,6 @@ addons:
 config_vars:
   LD_LIBRARY_PATH: /app/local/lib:/app/vendor/lib
   PATH: /app/local/bin:/app/vendor/bin:/usr/local/bin:/usr/bin:/bin
+default_process_types:
+  web: perl6 app.pl
 EOF

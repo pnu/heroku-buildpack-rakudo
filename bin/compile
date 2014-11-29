@@ -31,6 +31,7 @@ export PATH="$BUILD_DIR/vendor/rakudo/bin:$PATH"
 rm -rf /app/vendor/rakudo; mkdir -p /app/vendor/rakudo
 curl -sL $RAKUDO_PACKAGE | tar xzf - -C "/app/vendor/rakudo" &> /dev/null
 export PATH="/app/vendor/rakudo/bin:$PATH"
+export PATH="/app/vendor/rakudo/languages/perl6/site/bin:$PATH"
 ###
 
 CURRENT_RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
@@ -58,6 +59,7 @@ if [ -d "$CACHE_DIR/rakudo/local" ]; then
 fi
 
 ## TODO install project dependencies to path "local" and setup lib paths
+panda install .
 
 source $BP_DIR/bin/steps/hooks/post_compile $ENV_DIR
 
