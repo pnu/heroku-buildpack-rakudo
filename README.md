@@ -6,18 +6,26 @@ Usage
 
     $ git init
     $ cat >META.info
-    {}
+    {
+       "name": "WebApp",
+        "depends": [ "Bailador" ]
+    }
+    ^D
+    $ cat >app.pl
+    use Bailador;
+    get '/' => sub {
+        "hello world"
+    }
+    baile( Int(%*ENV<PORT> || 5000) );
     ^D
     $ git add -A; git commit -m 'implement the app'
     $ heroku create --buildpack https://github.com/pnu/heroku-buildpack-rakudo
     $ git push heroku master
-    $ heroku run perl6 -e\'.say for ^5\'
+    $ curl https://myapp-name-1234.herokuapp.com/
+    hello world
+    $ heroku run perl6 -e\'.print for ^5\'
     Running `perl6 -e'.say for ^5'` attached to terminal... up, run.7985
-    0
-    1
-    2
-    3
-    4
+    01234
 
 By default this buildpack uses the version "latest" found in AWS S3 bucket
 https://heroku-buildpack-rakudo.s3.amazonaws.com/. You can specify the version
