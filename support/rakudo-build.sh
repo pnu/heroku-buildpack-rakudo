@@ -39,9 +39,10 @@ export PATH=$VENDOR_PATH/bin:$PATH
 export PATH=$VENDOR_PATH/languages/perl6/site/bin:$PATH
 
 cd $BUILD_PATH/panda
-perl6 bootstrap.pl
-panda install --notests DBIish
-panda install Task::Star
+perl6 bootstrap.pl || true
+panda install --notests DBIish || true
+panda install Task::Star || { TASK_STAR_FAIL=1; }
+
 RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
 
 cd $BUILD_PATH
@@ -60,16 +61,15 @@ EOF
 cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION.log
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
 
-if [ -z "$RAKUDO_REVISION" ]; then
-    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
-    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
-fi
-
 cd $BUILD_PATH/panda
-PANDA_SUBMIT_TESTREPORTS=1 panda smoke
+PANDA_SUBMIT_TESTREPORTS=1 panda smoke || true
+
 cd $BUILD_PATH/s3cmd
 cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
-if [ -z "$RAKUDO_REVISION" ]; then
+
+if [ -z "$RAKUDO_REVISION" ] && [ -z "$TASK_STAR_FAIL" ]; then
+    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
+    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
     ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest-smoke.log
 fi
