@@ -7,7 +7,7 @@ BUILD_PATH="/tmp/build-rakudo-$$"
 VENDOR_PATH="/app/vendor/rakudo"
 mkdir -p $BUILD_PATH
 mkdir -p $VENDOR_PATH
-exec >$BUILD_PATH/log 2>&1
+exec &> >(tee $BUILD_PATH/log)
 
 cd $BUILD_PATH
 git clone https://github.com/rakudo/rakudo.git
@@ -57,10 +57,19 @@ use_https = True
 EOF
 
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
-mv $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION.log
+cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION.log
 ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
 
 if [ -z "$RAKUDO_REVISION" ]; then
     ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
     ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
+fi
+
+cd $BUILD_PATH/panda
+PANDA_SUBMIT_TESTREPORTS=1 panda smoke
+cd $BUILD_PATH/s3cmd
+cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log
+./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+if [ -z "$RAKUDO_REVISION" ]; then
+    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-smoke.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest-smoke.log
 fi
