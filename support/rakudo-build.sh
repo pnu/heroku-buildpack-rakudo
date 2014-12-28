@@ -11,28 +11,14 @@ exec &> >(tee $BUILD_PATH/log)
 
 cd $BUILD_PATH
 git clone https://github.com/rakudo/rakudo.git
-git clone https://github.com/perl6/nqp.git
-git clone https://github.com/MoarVM/MoarVM.git
 git clone --recursive git://github.com/tadzik/panda.git
 git clone https://github.com/s3tools/s3cmd
 
+cd $BUILD_PATH/rakudo
 if [ -n "$RAKUDO_REVISION" ]; then
-    cd $BUILD_PATH/rakudo
     git checkout $RAKUDO_REVISION
 fi
-cd $BUILD_PATH/nqp
-git checkout `cat $BUILD_PATH/rakudo/tools/build/NQP_REVISION`
-cd $BUILD_PATH/MoarVM
-git checkout `cat $BUILD_PATH/nqp/tools/build/MOAR_REVISION`
-
-cd $BUILD_PATH/MoarVM
-perl ./Configure.pl --prefix=$VENDOR_PATH
-make install
-cd $BUILD_PATH/nqp
-perl ./Configure.pl --backends=moar --prefix=$VENDOR_PATH
-make install
-cd $BUILD_PATH/rakudo
-perl ./Configure.pl --prefix=$VENDOR_PATH
+perl Configure.pl --gen-moar --gen-nqp --backends=moar --prefix=$VENDOR_PATH
 make install
 
 export PATH=$VENDOR_PATH/bin:$PATH
