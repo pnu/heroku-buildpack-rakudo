@@ -6,7 +6,8 @@ BUILD_PATH="/tmp/build-rakudo-$$"
 VENDOR_PATH="/app/vendor/rakudo"
 mkdir -p $BUILD_PATH
 mkdir -p $VENDOR_PATH
-exec &> >(tee $BUILD_PATH/log)
+exec  > >(tee -a $BUILD_PATH/log)
+exec 2> >(tee -a $BUILD_PATH/log >&2)
 
 cd $BUILD_PATH
 git clone https://github.com/rakudo/rakudo.git
@@ -21,6 +22,7 @@ if [ -n "$RAKUDO_REVISION" ]; then
     git checkout $RAKUDO_REVISION
 fi
 perl Configure.pl --gen-moar --gen-nqp --backends=moar --prefix=$VENDOR_PATH
+make test
 make install
 
 export PATH=$VENDOR_PATH/bin:$PATH
