@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+RAKUDO_CONFIGURE_OPTS=${RAKUDO_CONFIGURE_OPTS-'--gen-moar --gen-nqp --backends=moar'}
+RAKUDO_DIST_NAME=${RAKUDO_DIST_NAME-'rakudo'}
+
 HEROKU_STACK=${HEROKU_STACK-'cedar-14'}
 BUILD_PATH="/tmp/build-rakudo-$$"
 VENDOR_PATH="/app/vendor/rakudo"
@@ -15,13 +18,13 @@ git clone --recursive git://github.com/tadzik/panda.git
 git clone https://github.com/s3tools/s3cmd
 
 
-echo "### BUILD rakudo ($RAKUDO_REVISION) / MoarVM ###"
+echo "### BUILD $RAKUDO_DIST_NAME ($RAKUDO_REVISION) / $RAKUDO_CONFIGURE_OPTS ###"
 
 cd $BUILD_PATH/rakudo
 if [ -n "$RAKUDO_REVISION" ]; then
     git checkout $RAKUDO_REVISION
 fi
-perl Configure.pl --gen-moar --gen-nqp --backends=moar --prefix=$VENDOR_PATH
+perl Configure.pl $RAKUDO_CONFIGURE_OPTS --prefix=$VENDOR_PATH
 make test
 make install
 
@@ -39,10 +42,10 @@ panda install --notests DBIish || true
 panda install Task::Star || { TASK_STAR_FAIL=1; }
 
 cd $BUILD_PATH
-tar cvzf rakudo-$RAKUDO_VERSION.tgz -C $VENDOR_PATH .
+tar cvzf $RAKUDO_DIST_NAME-$RAKUDO_VERSION.tgz -C $VENDOR_PATH .
 
 
-echo "### UPLOAD rakudo-$RAKUDO_VERSION ###"
+echo "### UPLOAD $RAKUDO_DIST_NAME-$RAKUDO_VERSION ###"
 
 cd $BUILD_PATH/s3cmd
 git checkout v1.5.0-beta1
@@ -53,9 +56,9 @@ secret_key = $AWS_SECRET_ACCESS_KEY
 use_https = True
 EOF
 
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
-cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION.log
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+cp $BUILD_PATH/log $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.log
+./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
 
 
 echo "### TEST panda smoke ###"
@@ -68,13 +71,13 @@ make spectest || { SPECTEST_FAIL=1; }
 
 echo "### UPLOAD log ###"
 cd $BUILD_PATH/s3cmd
-cp $BUILD_PATH/log $BUILD_PATH/rakudo-$RAKUDO_VERSION-test.log
-./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-test.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
+cp $BUILD_PATH/log $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION-test.log
+./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION-test.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/
 
 if [ -z "$RAKUDO_REVISION" ] && [ -z "$TASK_STAR_FAIL" ] && [ -z "$SPECTEST_FAIL" ]; then
-    echo "### UPLOAD rakudo-latest and logs ###"
-    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.tgz
-    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest.log
-    ./s3cmd put --acl-public $BUILD_PATH/rakudo-$RAKUDO_VERSION-test.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/rakudo-latest-test.log
+    echo "### UPLOAD $RAKUDO_DIST_NAME-latest and logs ###"
+    ./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.tgz s3://$S3_BUCKET_NAME/$HEROKU_STACK/$RAKUDO_DIST_NAME-latest.tgz
+    ./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/$RAKUDO_DIST_NAME-latest.log
+    ./s3cmd put --acl-public $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION-test.log s3://$S3_BUCKET_NAME/$HEROKU_STACK/$RAKUDO_DIST_NAME-latest-test.log
 fi
 
