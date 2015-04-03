@@ -27,6 +27,7 @@ make install
 
 export PATH=$VENDOR_PATH/bin:$PATH
 export PATH=$VENDOR_PATH/languages/perl6/site/bin:$PATH
+export PATH=$VENDOR_PATH/share/perl6/site/bin:$PATH
 RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
 
 

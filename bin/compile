@@ -32,6 +32,7 @@ rm -rf /app/vendor/rakudo; mkdir -p /app/vendor/rakudo
 curl -sL $RAKUDO_PACKAGE | tar xzf - -C "/app/vendor/rakudo" &> /dev/null
 export PATH="/app/vendor/rakudo/bin:$PATH"
 export PATH="/app/vendor/rakudo/languages/perl6/site/bin:$PATH"
+export PATH="/app/vendor/rakudo/share/perl6/site/bin:$PATH"
 ###
 
 CURRENT_RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
@@ -39,6 +40,7 @@ status "Current rakudo version is $CURRENT_RAKUDO_VERSION"
 
 echo "export PATH=\"\$HOME/vendor/rakudo/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo.sh
 echo "export PATH=\"\$HOME/vendor/rakudo/languages/perl6/site/bin:\$PATH\";" > $BUILD_DIR/.profile.d/buildpack_vendor_rakudo_site_bin.sh
+echo "export PATH=\"\$HOME/vendor/rakudo/share/perl6/site/bin:\$PATH\";" >> $BUILD_DIR/.profile.d/buildpack_vendor_rakudo_site_bin.sh
 for package in $RAKUDO_LIBS; do
     RAKUDO_PACKAGE="$RAKUDO_URL/rakudo-$RAKUDO_VERSION-$package.tgz"
     status "Vendoring $RAKUDO_PACKAGE"
