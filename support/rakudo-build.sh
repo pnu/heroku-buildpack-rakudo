@@ -63,7 +63,7 @@ cp $BUILD_PATH/log $BUILD_PATH/$RAKUDO_DIST_NAME-$RAKUDO_VERSION.log
 
 echo "### TEST panda smoke ###"
 cd $BUILD_PATH/panda
-PANDA_SUBMIT_TESTREPORTS=1 panda smoke || true
+PANDA_SUBMIT_TESTREPORTS=1 panda --exclude="XML::Query,v5" smoke || true
 
 echo "### TEST spectest ###"
 cd $BUILD_PATH/rakudo
