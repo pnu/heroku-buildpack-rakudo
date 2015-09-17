@@ -38,7 +38,7 @@ echo "### INSTALL Task::Star ###"
 
 cd $BUILD_PATH/panda
 perl6 bootstrap.pl || true
-panda install --notests DBIish || true
+panda --notests install DBIish || true
 panda install Task::Star || { TASK_STAR_FAIL=1; }
 
 cd $BUILD_PATH
