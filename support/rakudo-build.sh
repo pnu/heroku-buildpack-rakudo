@@ -65,9 +65,9 @@ echo "### TEST panda smoke ###"
 cd $BUILD_PATH/panda
 PANDA_SUBMIT_TESTREPORTS=1 panda --exclude="XML::Query,v5" smoke || true
 
-echo "### TEST spectest ###"
-cd $BUILD_PATH/rakudo
-make spectest || { SPECTEST_FAIL=1; }
+## echo "### TEST spectest ###"
+## cd $BUILD_PATH/rakudo
+## make spectest || { SPECTEST_FAIL=1; }
 
 echo "### UPLOAD log ###"
 cd $BUILD_PATH/s3cmd
