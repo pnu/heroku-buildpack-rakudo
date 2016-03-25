@@ -32,12 +32,12 @@ https://heroku-buildpack-rakudo.s3.amazonaws.com/. You can specify the version
 with heroku configuration, or by adding file `.rakudo-version` to the root
 directory of the project. Eg.
 
-    $ echo "2014.10.133.gf.2.ffb.9.a" >.rakudo-version
+    $ echo "2016.03.38.g.8.df.1.a.69" >.rakudo-version
     $ git add .rakudo-version; git commit -m 'set rakudo version'
 
     or..
 
-    $ heroku config:set BUILDPACK_RAKUDO_VERSION=2014.10.133.gf.2.ffb.9.a
+    $ heroku config:set BUILDPACK_RAKUDO_VERSION=2016.03
 
 Next build will use the specified version.
 
