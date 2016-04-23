@@ -20,19 +20,18 @@ RAKUDO_VERSION=${RAKUDO_VERSION-'latest'}
 RAKUDO_VERSION=${BUILDPACK_RAKUDO_VERSION-$RAKUDO_VERSION}
 RAKUDO_LIBS=${BUILDPACK_RAKUDO_LIBS-''}
 RAKUDO_URL=${BUILDPACK_RAKUDO_URL:-"https://heroku-buildpack-rakudo.s3.amazonaws.com/$STACK"}
+#PANDA_REPO=${BUILDPACK_PANDA_REPO:-'https://github.com/pnu/panda.git'}
+#PANDA_VERSION=${BUILDPACK_PANDA_VERSION:-'master'}
 
 RAKUDO_PACKAGE="$RAKUDO_URL/rakudo-$RAKUDO_VERSION.tgz"
 status "Vendoring $RAKUDO_PACKAGE"
-mkdir -p "$BUILD_DIR/vendor/rakudo"
-curl -sL $RAKUDO_PACKAGE | tar xzf - -C "$BUILD_DIR/vendor/rakudo" &> /dev/null
-
-export PATH="$BUILD_DIR/vendor/rakudo/bin:$PATH"
-### TODO hack: current binaries work only when installed to /app/vendor/rakudo
+### hack - current binaries work only when installed to /app/vendor/rakudo
 rm -rf /app/vendor/rakudo; mkdir -p /app/vendor/rakudo
 curl -sL $RAKUDO_PACKAGE | tar xzf - -C "/app/vendor/rakudo" &> /dev/null
 export PATH="/app/vendor/rakudo/bin:$PATH"
 export PATH="/app/vendor/rakudo/languages/perl6/site/bin:$PATH"
 export PATH="/app/vendor/rakudo/share/perl6/site/bin:$PATH"
+#chmod -R -w /app/vendor/rakudo # make repo not installable
 ###
 
 CURRENT_RAKUDO_VERSION=`perl6 -e'print $*PERL.compiler.version'`
@@ -44,31 +43,38 @@ echo "export PATH=\"\$HOME/vendor/rakudo/share/perl6/site/bin:\$PATH\";" >> $BUI
 for package in $RAKUDO_LIBS; do
     RAKUDO_PACKAGE="$RAKUDO_URL/rakudo-$RAKUDO_VERSION-$package.tgz"
     status "Vendoring $RAKUDO_PACKAGE"
-    curl -sL $RAKUDO_PACKAGE | tar xzf - -C "$BUILD_DIR/vendor/rakudo" &> /dev/null
+    curl -sL $RAKUDO_PACKAGE | tar xzf - -C "/app/vendor/rakudo" &> /dev/null ### hack
 done
+
+#status "Vendoring $PANDA_REPO@$PANDA_VERSION"
+#git clone --recursive -b $PANDA_VERSION $PANDA_REPO /tmp/panda.$$ &> /dev/null
+#cd /tmp/panda.$$
+#perl6 bootstrap.pl > /dev/null || true
 
 cd $BUILD_DIR
 
 source $BP_DIR/bin/steps/hooks/pre_compile $ENV_DIR
 
-if [ -d "$CACHE_DIR/rakudo/local" ]; then
+if [ -d "$CACHE_DIR/rakudo/local-dot-perl6" ]; then
   if [ -f "$CACHE_DIR/rakudo/.rakudo-version" ] && [ $(cat $CACHE_DIR/rakudo/.rakudo-version) != "$CURRENT_RAKUDO_VERSION" ]; then
-    status "Rakudo version changed, not restoring local directory from cache"
+    status "Rakudo version changed, not restoring local .perl6 directory from cache"
   else
-    status "Restoring local directory from cache"
-    cp -R "$CACHE_DIR/rakudo/local" . &> /dev/null || true
+    status "Restoring local .perl6 directory from cache"
+    cp -R "$CACHE_DIR/rakudo/local-dot-perl6" .perl6 &> /dev/null || true
   fi
 fi
 
-## TODO install project dependencies to path "local" and setup lib paths
-panda install .
+mkdir -p .perl6; rm -rf /app/.perl6; mv .perl6 /app/.perl6 ### hack
+panda installdeps .
 
 source $BP_DIR/bin/steps/hooks/post_compile $ENV_DIR
+rm -rf .perl6; cp -R /app/.perl6 .perl6 ### hack
+rm -rf vendor/rakudo; mkdir -p vendor; cp -R /app/vendor/rakudo vendor/rakudo ### hack
 
 rm -rf $CACHE_DIR/rakudo
 mkdir -p $CACHE_DIR/rakudo
-if [ -d "local" ]; then
-  status "Caching local directory for future builds"
-  cp -R local $CACHE_DIR/rakudo/
+if [ -d ".perl6" ]; then
+  status "Caching local .perl6 directory for future builds"
+  cp -R .perl6 $CACHE_DIR/rakudo/local-dot-perl6
 fi
 echo $CURRENT_RAKUDO_VERSION >$CACHE_DIR/rakudo/.rakudo-version
